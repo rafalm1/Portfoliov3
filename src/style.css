@@ -161,6 +161,16 @@ canvas {
 /* Full-screen mode (set on <body> after the zoom): the laptop's iframe breaks out of drei's 3D transforms and
    covers the window. It's the same element, so the portfolio keeps running instead of reloading.
    Any transform / perspective / preserve-3d on an ancestor would trap position: fixed, hence the overrides. */
+.portfolioFullscreen,
+.portfolioFullscreen body,
+.portfolioFullscreen #root {
+  background: #111110;
+}
+
+.portfolioFullscreen #root::before {
+  display: none;
+}
+
 .portfolioFullscreen .htmlSection,
 .portfolioFullscreen .htmlSection * {
   transform: none !important;

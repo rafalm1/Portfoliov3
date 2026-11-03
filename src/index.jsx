@@ -20,11 +20,11 @@ function App() {
   // the window (see .portfolioFullscreen in style.css) — the same element, so the portfolio doesn't reload.
   useEffect(() => {
     if (!isFullscreen) return;
-    document.body.classList.add("portfolioFullscreen");
+    document.documentElement.classList.add("portfolioFullscreen");
     // Expand on the next frames so the size change animates from the starting position.
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() =>
-        document.body.classList.add("portfolioExpanded")
+        document.documentElement.classList.add("portfolioExpanded")
       );
     });
     return () => cancelAnimationFrame(frame);
