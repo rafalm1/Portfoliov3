@@ -18,7 +18,7 @@ const LID_OPEN_DURATION = 1.8; // seconds
 const LID_CLOSED_OFFSET = Math.PI / 2; // extra hinge rotation that folds the lid shut
 
 // "Enter" zoom: the camera flies up to the screen until it fills the window.
-const ZOOM_DURATION = 1.2; // seconds
+const ZOOM_DURATION = 1.1; // seconds
 const SCREEN_WIDTH_PX = 1140; // keep in sync with .htmlSection iframe in style.css
 const SCREEN_HEIGHT_PX = 735;
 const SCREEN_DISTANCE_FACTOR = 2.95;
@@ -29,6 +29,8 @@ const prefersReducedMotion = window.matchMedia(
 
 const easeInOutCubic = (x) =>
   x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+// Starts gently but arrives at speed: the full-screen expansion picks the motion up, so there's no pause in between.
+const easeInSine = (x) => 1 - Math.cos((x * Math.PI) / 2);
 
 const screenCenter = new Vector3();
 const screenNormal = new Vector3();
@@ -115,15 +117,17 @@ export default function Experience({
     anchor.getWorldScale(screenScale);
     screenNormal.set(0, 0, 1).transformDirection(anchor.matrixWorld);
 
-    // Distance at which the screen covers the whole window.
+    // Stop where the screen shows the portfolio at its real size (1 CSS px = 1 screen px), so when the iframe then
+    // grows to full screen nothing changes scale. On windows smaller than the screen, stop where it just fits.
     const pxToWorld = (SCREEN_DISTANCE_FACTOR / 400) * screenScale.y;
     const halfFovTan = Math.tan(MathUtils.degToRad(camera.fov / 2));
-    const fillHeight = (SCREEN_HEIGHT_PX * pxToWorld) / 2 / halfFovTan;
-    const fillWidth =
+    const actualSize = (pxToWorld * size.height) / 2 / halfFovTan;
+    const fitHeight = (SCREEN_HEIGHT_PX * pxToWorld) / 2 / halfFovTan;
+    const fitWidth =
       (SCREEN_WIDTH_PX * pxToWorld) / 2 / (halfFovTan * (size.width / size.height));
     zoomTarget
       .copy(screenCenter)
-      .addScaledVector(screenNormal, Math.min(fillHeight, fillWidth));
+      .addScaledVector(screenNormal, Math.max(actualSize, fitHeight, fitWidth));
 
     const progress = prefersReducedMotion
       ? 1
@@ -132,7 +136,7 @@ export default function Experience({
           0,
           1
         );
-    const eased = easeInOutCubic(progress);
+    const eased = easeInSine(progress);
 
     camera.position.lerpVectors(zoom.current.fromPosition, zoomTarget, eased);
     lookTarget.lerpVectors(zoom.current.fromLookAt, screenCenter, eased);

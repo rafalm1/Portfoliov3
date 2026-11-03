@@ -4,33 +4,36 @@ import { Canvas } from "@react-three/fiber";
 import Experience from "./Experience.jsx";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import PageLoader from "./PageLoader.jsx";
-import { PORTFOLIO_ENTER_URL } from "./portfolio.js";
 
 function App() {
   const [isLoaderGone, setIsLoaderGone] = useState(false);
   const [isLidOpen, setIsLidOpen] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const handleLoaderLeave = useCallback(() => setIsLoaderGone(true), []);
   const handleLidOpened = useCallback(() => setIsLidOpen(true), []);
   const handleEnter = useCallback(() => setIsEntering(true), []);
-  const handleEntered = useCallback(
-    () => window.location.assign(PORTFOLIO_ENTER_URL),
-    []
-  );
+  const handleEntered = useCallback(() => setIsFullscreen(true), []);
 
-  // Coming back with the browser's Back button can restore this page mid-zoom from the cache; start over instead.
+  // Once the camera has flown into the screen, the laptop's iframe itself is lifted out of the 3D scene to cover
+  // the window (see .portfolioFullscreen in style.css) — the same element, so the portfolio doesn't reload.
   useEffect(() => {
-    const handlePageShow = (event) => {
-      if (event.persisted) window.location.reload();
-    };
-    window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
-  }, []);
+    if (!isFullscreen) return;
+    document.body.classList.add("portfolioFullscreen");
+    // Expand on the next frames so the size change animates from the starting position.
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() =>
+        document.body.classList.add("portfolioExpanded")
+      );
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isFullscreen]);
 
   return (
     <>
       <Canvas
+        frameloop={isFullscreen ? "never" : "always"}
         camera={{
           fov: 45,
           near: 0.1,
@@ -58,12 +61,6 @@ function App() {
       >
         Wyświetl portfolio na pełnym ekranie <span aria-hidden="true">→</span>
       </button>
-
-      {/* Fades to the portfolio's background just before navigating, so the hand-off doesn't flash. */}
-      <div
-        className={`enterFade ${isEntering ? "enterFadeVisible" : ""}`}
-        aria-hidden="true"
-      />
 
       <PageLoader onLeave={handleLoaderLeave} />
     </>
