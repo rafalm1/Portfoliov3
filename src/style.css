@@ -1,3 +1,13 @@
+:root {
+  /* Studio backdrop: a soft spotlight behind the laptop fading into the grey, darker towards the edges. */
+  --scene-background: radial-gradient(
+    ellipse 70% 65% at 50% 45%,
+    rgb(92, 92, 90) 0%,
+    rgb(68, 68, 67) 55%,
+    rgb(42, 42, 41) 100%
+  );
+}
+
 html,
 body,
 #root {
@@ -7,6 +17,21 @@ body,
   width: 100%;
   height: 100%;
   background: rgb(68, 68, 67);
+}
+
+#root {
+  background: var(--scene-background);
+}
+
+/* Faint dot grid over the backdrop, strongest around the laptop and fading out towards the edges. */
+#root::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1.6px) 0
+    0 / 22px 22px;
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 25%, transparent 100%);
+  pointer-events: none;
 }
 
 canvas {
@@ -19,4 +44,100 @@ canvas {
   border: none;
   border-radius: 5px;
   background: #000000;
+}
+
+/* Entry loader (PageLoader.jsx): a spinning ring on the scene's own background, so fading out doesn't flash. */
+.pageLoader {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: var(--scene-background);
+  transition: opacity 0.4s ease;
+}
+
+.pageLoaderLeaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pageLoaderSpinner {
+  width: 44px;
+  height: 44px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #c7a971;
+  border-radius: 50%;
+  animation: pageLoaderSpin 0.9s linear infinite;
+}
+
+@keyframes pageLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The laptop screen is a preview: the iframe ignores the pointer and a click on it opens the portfolio. */
+.htmlSection iframe {
+  pointer-events: none;
+}
+
+.screenPreview {
+  cursor: pointer;
+}
+
+/* "Full screen" button in the bottom-right corner, styled like the portfolio's primary button. */
+.enterButton {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  z-index: 5;
+  padding: 15px 19px;
+  border: 0;
+  background: #c7a971;
+  color: #111316;
+  font: 700 16px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity 0.5s ease, transform 0.5s ease, background-color 0.2s ease;
+}
+
+.enterButtonVisible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.enterButton:hover,
+.enterButton:focus-visible {
+  background: #dec79b;
+  outline: none;
+}
+
+.enterButton span {
+  display: inline-block;
+  margin-left: 14px;
+  transition: transform 0.2s ease;
+}
+
+.enterButton:hover span,
+.enterButton:focus-visible span {
+  transform: translateX(3px);
+}
+
+/* Covers the zoomed-in screen with the portfolio's background right before navigating to it. */
+.enterFade {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: #111110;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease 0.8s;
+}
+
+.enterFadeVisible {
+  opacity: 1;
 }
